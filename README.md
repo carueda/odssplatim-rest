@@ -17,4 +17,4 @@ To explore the REST API:
 - Open http://petstore.swagger.wordnik.com/
 - Enter `http://localhost:8181/api-docs` in the URL field
 
-For the ODSS Platform Timeline Editor, see https://github.com/carueda/odssplatim-ui
+ODSS Platform Timeline Editor prototype: https://github.com/carueda/odssplatim-ui
