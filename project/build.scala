@@ -10,7 +10,7 @@ object OdssPlatformTimelineBuild extends Build {
   import com.earldouglas.xsbtwebplugin.PluginKeys.port
 
   val Organization      = "org.mbari"
-  val Name              = "ODSS Platform Timeline"
+  val Name              = "odssplatim-rest"
   val Version           = "0.1.0-SNAPSHOT"
   val ScalaVersion      = "2.10.0"
   val ScalatraVersion   = "2.2.1"     //  "2.2.2-SNAPSHOT"  --> resolvers += Opts.resolver.sonatypeSnapshots,
@@ -20,7 +20,7 @@ object OdssPlatformTimelineBuild extends Build {
   val jettyPort = 8181
 
   lazy val project = Project(
-    "odss-platform-timeline",
+    "odssplatim-rest",
     file("."),
     settings = Defaults.defaultSettings ++ ScalatraPlugin.scalatraWithJRebel ++ assemblySettings ++ Seq(
       organization := Organization,

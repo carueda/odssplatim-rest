@@ -12,9 +12,9 @@
         <appender-ref ref="consoleAppender"/>
     </logger>
 
-    <root>
-        <level value="info"/>
-        <appender-ref ref="consoleAppender"/>
-    </root>
+    <!--<root>-->
+        <!--<level value="info"/>-->
+        <!--<appender-ref ref="consoleAppender"/>-->
+    <!--</root>-->
 
 </log4j:configuration>
