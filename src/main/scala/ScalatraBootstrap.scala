@@ -35,6 +35,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context mount(new PeriodsController,     "/periods/*")
     context mount(new TimelinesController,   "/timelines/*")
     context mount(new ResourcesApp,          "/api-docs/*")
+    context mount(new ApiDocsFix,            "/api-docs-fix/*")
 
     setupOpt = Some(setup)
   }
