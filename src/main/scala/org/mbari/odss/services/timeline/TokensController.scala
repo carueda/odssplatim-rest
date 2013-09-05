@@ -133,7 +133,8 @@ class TokensController(implicit val app: App,
         queryParam[String]("state").        description("State or activity")))
 
   put("/:id", operation(apiUpdate)) {
-    logger.info("PUT: " + params)
+    logger.info("PUT params=" + params)
+    logger.info("PUT multiParams=" + multiParams)
     val id = params("id")
     val obj = MongoDBObject("_id" -> new ObjectId(id))
 
