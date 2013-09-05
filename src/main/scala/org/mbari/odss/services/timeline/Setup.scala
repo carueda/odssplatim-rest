@@ -44,7 +44,7 @@ class Setup(configFilename: String) extends AnyRef with Logging {
   val tokenColl    = mongoClientDb("tokens")
   val periodColl   = mongoClientDb("periods")
 
-  implicit val app = new App(config, platformColl, tokenColl, periodColl)
+  implicit val app = new App(configFile, platformColl, tokenColl, periodColl)
   implicit val swagger = new OdssPlatformTimelineSwagger
 
   mcOpt = Some(mongoClient)

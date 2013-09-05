@@ -126,13 +126,14 @@ class TokensController(implicit val app: App,
       notes dateTimeNotes +
          "<br /> TODO: all parameters are required at the moment but they should be optional (except for the id)."
       parameters(
-        pathParam[String]("id").description("ID of the token to be updated"),
+        pathParam[String]("id").            description("ID of the token to be updated"),
         queryParam[String]("platform_id").  description("ID of associated platform"),
         queryParam[String]("start").        description("Start date for the token"),
         queryParam[String]("end").          description("End date for the token"),
         queryParam[String]("state").        description("State or activity")))
 
   put("/:id", operation(apiUpdate)) {
+    logger.info("PUT: " + params)
     val id = params("id")
     val obj = MongoDBObject("_id" -> new ObjectId(id))
 

@@ -4,7 +4,7 @@ import org.scalatra.swagger._
 
 import com.mongodb.casbah.Imports._
 import scala.Some
-import org.json4s.JsonAST.JString
+import org.json4s.JsonAST.{JField, JObject, JString}
 import com.typesafe.scalalogging.slf4j.Logging
 
 
@@ -83,6 +83,7 @@ class PeriodsController(implicit val app: App,
         queryParam[String]("end").        description("End date for the period")))
 
   put("/:id", operation(apiUpdate)) {
+    logger.info("PUT: " + params)
     val id = params("id")
     val obj = MongoDBObject("_id" -> new ObjectId(id))
 
@@ -113,6 +114,68 @@ class PeriodsController(implicit val app: App,
 
     val result = periodColl.remove(obj)
     val info = "period '" + id + "' removed (" + result.getN + ")"
+    logger.info(info)
+    JString(info)
+  }
+
+  ////////////////////////////////////////////////////
+  // default period operations
+
+  val apiGetDefaultId =
+    (apiOperation[String]("getDefaultPeriodId")
+      summary "Gets the ID of the default period")
+
+  get("/default", operation(apiGetDefaultId)) {
+    val obj = MongoDBObject("defaultPeriodId" -> MongoDBObject("$exists" -> true))
+
+    periodColl.findOne(obj) match {
+      case None    => halt(404, "no default period defined")
+
+      case Some(e) => {
+        val defaultPeriodId = e.getAs[String]("defaultPeriodId").getOrElse("no default period defined")
+        JObject(JField("defaultPeriodId", JString(defaultPeriodId)))
+      }
+    }
+  }
+
+  val apiSetDefaultId =
+    (apiOperation[String]("setDefaultPeriodId")
+      summary "Sets the ID of the default period")
+
+  put("/default/:id", operation(apiSetDefaultId)) {
+    logger.info("PUT: " + params)
+    val id = params.get("id")
+    val obj = MongoDBObject("defaultPeriodId" -> MongoDBObject("$exists" -> true))
+
+    periodColl.findOne(obj) match {
+      case None    => {
+        val newObj = MongoDBObject("defaultPeriodId" -> id)
+        periodColl += newObj
+        val info = "default period set to '" + id + "'"
+        logger.info(info)
+        JString(info)
+      }
+
+      case Some(e) => {
+        val update = $set("defaultPeriodId" -> id)
+        val result = periodColl.update(obj, update)
+        val info = "default period updated to '" + id + "'"
+        logger.info(info)
+        JString(info)
+      }
+    }
+  }
+
+  val apiDeleteDefaultId =
+    (apiOperation[String]("deleteDefaultPeriodId")
+      summary "Deletes the indication of the default period")
+
+  delete("/default", operation(apiDeleteDefaultId)) {
+    logger.info("DELETE: " + params)
+    val obj = MongoDBObject("defaultPeriodId" -> MongoDBObject("$exists" -> true))
+
+    val result = periodColl.remove(obj)
+    val info = "Default period ID removed (" + result.getN + ")"
     logger.info(info)
     JString(info)
   }

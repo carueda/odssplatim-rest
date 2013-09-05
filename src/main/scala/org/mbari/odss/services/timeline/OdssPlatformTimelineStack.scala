@@ -7,6 +7,7 @@ import org.scalatra.swagger.SwaggerSupport
 import com.mongodb.casbah.Imports._
 import java.util.Collections
 import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.config.ConfigFactory
 
 
 /**
@@ -32,9 +33,10 @@ trait OdssPlatformTimelineStack extends ScalatraServlet with NativeJsonSupport w
    * @param path   path in config
    */
   def repopulate(app: App, coll: MongoCollection, path: String) = {
+    logger.info("repopulating " + path + " from file " +app.configFile)
+    val config = ConfigFactory.parseFile(app.configFile)
     import collection.JavaConversions._
-    val elements = if (app.config.hasPath(path)) app.config.getList(path).unwrapped else Collections.emptyList()
-    logger.debug(path + " config = " + path)
+    val elements = if (config.hasPath(path)) config.getList(path).unwrapped else Collections.emptyList()
     if (elements.length > 0) {
       val result = coll.remove(MongoDBObject())
       logger.debug(coll.name + ": docs removed: " + result.getN)

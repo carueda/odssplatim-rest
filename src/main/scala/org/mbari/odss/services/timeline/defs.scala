@@ -2,6 +2,7 @@ package org.mbari.odss.services.timeline
 
 import com.typesafe.config.Config
 import com.mongodb.casbah.Imports._
+import java.io.File
 
 
 case class Platform(id:        Option[String],
@@ -20,7 +21,7 @@ case class Period(id:     Option[String],
 
 
 class App(
-  val config:       Config,
+  val configFile:   File,
   val platformColl: MongoCollection,
   val tokenColl:    MongoCollection,
   val periodColl:   MongoCollection)
