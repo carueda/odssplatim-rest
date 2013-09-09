@@ -9,6 +9,10 @@ mongo {
   db   = <database name>
   user = <user name>
   pw   = <user password>
+
+  platforms = <collection name>
+  periods   = <collection name>
+  tokens    = <collection name>
 }
 
 #

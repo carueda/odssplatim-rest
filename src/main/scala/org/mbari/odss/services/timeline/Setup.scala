@@ -28,21 +28,31 @@ class Setup(configFilename: String) extends AnyRef with Logging {
   // log the mongoConfig; mask password:
   logger.info(s"mongoConfig = ${ConfigFactory.parseString("pw=\"*\"").withFallback(mongoConfig)}")
 
+  private def cfgString(path: String, default: String = null): String = {
+    if (mongoConfig.hasPath(path)) mongoConfig.getString(path) else default
+  }
+
   val host = mongoConfig.getString("host")
   val port = mongoConfig.getInt(   "port")
-  val user = mongoConfig.getString("user")
-  val pw   = mongoConfig.getString("pw")
+  val user = cfgString("user")
+  val pw   = cfgString("pw")
   val db   = mongoConfig.getString("db")
 
-  logger.info(s"connecting to $host:$port/$db ...")
   val serverAddress = new ServerAddress(host, port)
-  val credential = MongoCredential(user, db, pw.toCharArray)
-  val mongoClient = MongoClient(serverAddress, List(credential))
+  val mongoClient: MongoClient = if (user != null && pw != null) {
+      logger.info(s"connecting to $host:$port/$db using credentials ...")
+      val credential = MongoCredential(user, db, pw.toCharArray)
+      MongoClient(serverAddress, List(credential))
+    }
+    else {
+      logger.info(s"connecting to $host:$port/$db with no credentials ...")
+      MongoClient(serverAddress)
+    }
 
   val mongoClientDb = mongoClient(db)
-  val platformColl = mongoClientDb("platforms")
-  val tokenColl    = mongoClientDb("tokens")
-  val periodColl   = mongoClientDb("periods")
+  val platformColl  = mongoClientDb(cfgString("platforms", "platforms"))
+  val periodColl    = mongoClientDb(cfgString("periods",   "periods"))
+  val tokenColl     = mongoClientDb(cfgString("tokens",    "tokens"))
 
   implicit val app = new App(configFile, platformColl, tokenColl, periodColl)
   implicit val swagger = new OdssPlatformTimelineSwagger
