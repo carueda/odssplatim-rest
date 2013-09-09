@@ -3,9 +3,11 @@ package org.mbari.odss.services.timeline
 import org.scalatra.swagger._
 
 import com.mongodb.casbah.Imports._
+import com.typesafe.scalalogging.slf4j.Logging
+import org.bson.types.ObjectId
+import com.mongodb.casbah.commons.TypeImports.ObjectId
 import scala.Some
 import org.json4s.JsonAST.JString
-import com.typesafe.scalalogging.slf4j.Logging
 
 
 /**
@@ -62,9 +64,10 @@ class TokensController(implicit val app: App,
       parameter pathParam[String]("id").description("ID of desired token"))
 
   get("/:id", operation(apiFindById)) {
-    val id = params("id")
+    val id: String = params.getOrElse("id", halt(400, "id"))
+    val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(404, s"'$id' is an invalid id")
+    val query = MongoDBObject("_id" -> _id)
     logger.info("GET /tokens/" + id)
-    val query = MongoDBObject("_id" -> new ObjectId(id))
     val found = tokenColl.find(query)
     val res = found map {e =>
       for {
@@ -88,7 +91,7 @@ class TokensController(implicit val app: App,
         queryParam[String]("state").      description("State or activity")))
 
   post("/", operation(apiAdd)) {
-    logger.debug("POST token body = " + request.body)
+    logger.debug("POST token params = " + params)
 
 //    val token = parsedBody.extract[Token]
 //    logger.debug("POST token = " + token)
@@ -133,19 +136,32 @@ class TokensController(implicit val app: App,
         queryParam[String]("state").        description("State or activity")))
 
   put("/:id", operation(apiUpdate)) {
-    logger.info("PUT params=" + params)
-    logger.info("PUT multiParams=" + multiParams)
-    val id = params("id")
-    val obj = MongoDBObject("_id" -> new ObjectId(id))
+    val id: String = params.getOrElse("id", halt(400, "id"))
 
+    logger.info("PUT params = " + params)
+//    logger.info("PUT content-type = " + request.header("content-type"))
+    logger.info("PUT body = " + request.body)
+
+    val json = parse(request.body)
+    val map = json.extract[Map[String, String]]
+
+    val platform_id:   String = map.getOrElse("platform_id", halt(400, "platform_id"))
+    val start:         String = map.getOrElse("start",       halt(400, "start"     ))
+    val end:           String = map.getOrElse("end",         halt(400, "end"       ))
+    val state:         String = map.getOrElse("state",       halt(400, "state"     ))
+
+    val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(404, s"'$id' is an invalid id")
+
+    val obj = MongoDBObject("_id" -> _id)
     tokenColl.findOne(obj) match {
-      case None    => halt(400, "document with id = '" +id+ "' does not exist in collection")
+      case None    => halt(404, "document with id = '" +id+ "' does not exist in collection")
 
-      case Some(_) => {
-        val update = $set("platform_id" -> params("platform_id"),
-                          "start"       -> params("start"),
-                          "end"         -> params("end"),
-                          "state"       -> params("state"))
+      case Some(found) => {
+        logger.info("BBB " + found)
+        val update = $set("platform_id" -> platform_id,
+                          "start"       -> start,
+                          "end"         -> end,
+                          "state"       -> state)
         val result = tokenColl.update(obj, update)
         val info = "Token '" + id + "' updated (" + result.getN + "): " + update
         logger.info(info)
@@ -160,8 +176,9 @@ class TokensController(implicit val app: App,
       parameter pathParam[String]("id").description("ID of the token to be removed"))
 
   delete("/:id", operation(apiDelete)) {
-    val id = params("id")
-    val obj = MongoDBObject("_id" -> new ObjectId(id))
+    val id: String = params.getOrElse("id", halt(400, "id"))
+    val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(404, s"'$id' is an invalid id")
+    val obj = MongoDBObject("_id" -> _id)
 
     val result = tokenColl.remove(obj)
     val info = "Token '" + id + "' removed (" + result.getN + ")"

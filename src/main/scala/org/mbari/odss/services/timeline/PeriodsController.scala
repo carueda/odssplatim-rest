@@ -6,6 +6,8 @@ import com.mongodb.casbah.Imports._
 import scala.Some
 import org.json4s.JsonAST.{JField, JObject, JString}
 import com.typesafe.scalalogging.slf4j.Logging
+import org.bson.types.ObjectId
+import com.mongodb.casbah.commons.TypeImports.ObjectId
 
 
 /**
@@ -84,8 +86,9 @@ class PeriodsController(implicit val app: App,
 
   put("/:id", operation(apiUpdate)) {
     logger.info("PUT: " + params)
-    val id = params("id")
-    val obj = MongoDBObject("_id" -> new ObjectId(id))
+    val id: String = params.getOrElse("id", halt(400, "id"))
+    val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(400, "id is invalid")
+    val obj = MongoDBObject("_id" -> _id)
 
     periodColl.findOne(obj) match {
       case None    => halt(400, "document with id = '" +id+ "' does not exist in collection")
@@ -109,9 +112,9 @@ class PeriodsController(implicit val app: App,
       parameter pathParam[String]("id").description("ID of the period to be removed"))
 
   delete("/:id", operation(apiDelete)) {
-    val id = params("id")
-    val obj = MongoDBObject("_id" -> new ObjectId(id))
-
+    val id: String = params.getOrElse("id", halt(400, "id"))
+    val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(400, "id is invalid")
+    val obj = MongoDBObject("_id" -> _id)
     val result = periodColl.remove(obj)
     val info = "period '" + id + "' removed (" + result.getN + ")"
     logger.info(info)
@@ -138,13 +141,16 @@ class PeriodsController(implicit val app: App,
     }
   }
 
-  val apiSetDefaultId =
+  val apiSetDefaultPeriodId =
     (apiOperation[String]("setDefaultPeriodId")
       summary "Sets the ID of the default period")
 
-  put("/default/:id", operation(apiSetDefaultId)) {
+  put("/default/:id", operation(apiSetDefaultPeriodId)) {
     logger.info("PUT: " + params)
-    val id = params.get("id")
+    val id: String = params.getOrElse("id", halt(400, "id"))
+
+    if (!ObjectId.isValid(id)) halt(400, "id is invalid")
+
     val obj = MongoDBObject("defaultPeriodId" -> MongoDBObject("$exists" -> true))
 
     periodColl.findOne(obj) match {
