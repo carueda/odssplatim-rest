@@ -8,6 +8,23 @@ import java.io.File
 case class Platform(id:        Option[String],
                     name:       String)
 
+/*
+in ODSS
+{
+    "__v" : 0,
+    "_id" : ObjectId("52203575a0b9d4224800001f"),
+    "abbreviation" : "RC",
+    "color" : "#FF6600",
+    "name" : "R_CARSON",
+    "trackingDBID" : 1,
+    "typeName" : "ship"
+}
+ */
+case class OdssPlatform(id:        Option[String],
+                        name:      String,
+                        color:     Option[String]
+                       )
+
 case class Token(id:            Option[String],
                  platform_id:   String,
                  start:         String,

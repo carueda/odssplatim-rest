@@ -6,6 +6,8 @@ import com.mongodb.casbah.Imports._
 import scala.Some
 import org.json4s.JsonAST.JString
 import com.typesafe.scalalogging.slf4j.Logging
+import org.bson.types.ObjectId
+import com.mongodb.casbah.commons.TypeImports.ObjectId
 
 
 /**
@@ -30,9 +32,10 @@ class PlatformsController(implicit val app: App,
     platformColl.find()
     val res = platformColl map {e =>
       for {
-        id       <- e.getAs[String]("_id")
+        id       <- e.getAs[ObjectId]("_id")
         name     <- e.getAs[String]("name")
-      } yield Platform(Some(id), name)
+        color    <- e.getAs[String]("color")
+      } yield OdssPlatform(Some(id.toString), name=name, color=Some(color))
     }
     res.toSet
   }
@@ -43,17 +46,17 @@ class PlatformsController(implicit val app: App,
       parameter pathParam[String]("id").description("ID of desired platform"))
 
   get("/:id", operation(apiFindById)) {
-    val _id = params("id")
-
-    logger.info("get platform info for '" + _id + "'")
-
-    val q = MongoDBObject("_id" -> _id)
-    val found = platformColl.find(q)
-
+    val id: String = params.getOrElse("id", halt(400, "id"))
+    val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(404, s"'$id' is an invalid id")
+    val query = MongoDBObject("_id" -> _id)
+    logger.info("GET /platforms/" + id)
+    val found = platformColl.find(query)
     val res = found map {e =>
       for {
-        name      <- e.getAs[String]("name")
-      } yield Platform(Some(_id), name)
+        id       <- e.getAs[ObjectId]("_id")
+        name     <- e.getAs[String]("name")
+        color    <- e.getAs[String]("color")
+      } yield OdssPlatform(Some(id.toString), name=name, color=Some(color))
     }
     res.toSet
   }
@@ -90,16 +93,6 @@ class PlatformsController(implicit val app: App,
                else "No platforms found with name '" + _id + "'"
     logger.info(info)
     JString(info)
-  }
-
-  /////////////////////////////////////////////////////
-  // special operations
-
-  /**
-   * Repopulates the collection.
-   */
-  post("/_reload") {
-    repopulate(app, platformColl, "platforms")
   }
 
 }

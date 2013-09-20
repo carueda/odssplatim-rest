@@ -5,6 +5,8 @@ import org.scalatra.swagger._
 import com.mongodb.casbah.Imports._
 import scala.Some
 import com.typesafe.scalalogging.slf4j.Logging
+import org.bson.types.ObjectId
+import com.mongodb.casbah.commons.TypeImports.ObjectId
 
 
 /**
@@ -25,28 +27,25 @@ class TimelinesController(implicit val app: App,
 
 
   get("/") {
-    // TODO: some search criteria, in particular min/max dates.
-
     def getPlatform(platform_id: String) = {
-      logger.info(" getPlatform '" + platform_id + "'")
-      val q = MongoDBObject("_id" -> platform_id)
+      logger.info(s" getPlatform '$platform_id'")
+      val q = MongoDBObject("_id" -> new ObjectId(platform_id))
       platformColl.find(q) map {e =>
         for {
           name      <- e.getAs[String]("name")
-        } yield Platform(Some(platform_id), name)
+          color     <- e.getAs[String]("color")
+        } yield OdssPlatform(Some(platform_id), name=name, color=Some(color))
       }
     }
 
     tokenColl.find()
-    val res = tokenColl map {e =>
-      logger.info("get timelines: element = " + e)
-      for {
-        platform_id <- e.getAs[String]("platform_id")
-      } yield platform_id
-    }
-    val unique = res.toSet
-    for {platform_id <- unique
-         foundPlatform <- getPlatform(platform_id.get)
+    val onlyIds = tokenColl map {e => e.getAs[String]("platform_id").getOrElse(null)}
+    val validIds = onlyIds filter ObjectId.isValid
+    val uniqueIds = validIds.toSet
+
+    logger.info(s"uniqueIds = $uniqueIds" )
+    for {platform_id <- uniqueIds
+         foundPlatform <- getPlatform(platform_id)
     } yield foundPlatform
   }
 
