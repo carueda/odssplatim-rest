@@ -4,10 +4,12 @@ import org.scalatra.swagger._
 
 import com.mongodb.casbah.Imports._
 import scala.Some
-import org.json4s.JsonAST.{JField, JObject, JString}
+import org.json4s.JsonAST.{JField, JObject, JString, JArray}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.bson.types.ObjectId
 import com.mongodb.casbah.commons.TypeImports.ObjectId
+import com.typesafe.config.ConfigFactory
+import java.util.Collections
 
 
 /**
@@ -186,6 +188,28 @@ class PeriodsController(implicit val app: App,
     JString(info)
   }
 
+  ////////////////////////////////////////////////////
+  // holidays
+
+  val apiGetHolidays =
+    (apiOperation[String]("getHolidays")
+      summary "Gets the holidays")
+
+  get("/holidays", operation(apiGetHolidays)) {
+    val obj = MongoDBObject("holidays" -> MongoDBObject("$exists" -> true))
+
+    periodColl.findOne(obj) match {
+      case None    => halt(404, "no holidays defined")
+
+      case Some(e) => {
+        // http://stackoverflow.com/a/11200484/830737
+        val holidays = (List() ++ e("holidays").asInstanceOf[BasicDBList]) map {x => JString(x.asInstanceOf[String]) }
+
+        JObject(JField("holidays", JArray(holidays)))
+      }
+    }
+  }
+
   /////////////////////////////////////////////////////
   // special operations
 
@@ -193,7 +217,37 @@ class PeriodsController(implicit val app: App,
    * Repopulates the collection.
    */
   post("/_reload") {
-    repopulate(app, periodColl, "periods")
+//    repopulate(app, periodColl, "periods")
+    resetHolidays()
+
+    def resetHolidays() = {
+      val path: String = "holidays"
+      logger.info("resetting " + path + " from file " +app.configFile)
+      val config = ConfigFactory.parseFile(app.configFile)
+      import collection.JavaConversions._
+      val elements = if (config.hasPath(path)) config.getList(path).unwrapped else Collections.emptyList()
+      if (elements.length > 0) {
+        val obj = MongoDBObject("holidays" -> MongoDBObject("$exists" -> true))
+
+        periodColl.findOne(obj) match {
+          case None    => {
+            val newObj = MongoDBObject("holidays" -> elements)
+            periodColl += newObj
+            val info = "holidays set to " + elements
+            logger.info(info)
+            JString(info)
+          }
+
+          case Some(e) => {
+            val update = $set("holidays" -> elements)
+            val result = periodColl.update(obj, update)
+            val info = "holidays updated to " + elements
+            logger.info(info)
+            JString(info)
+          }
+        }
+      }
+    }
   }
 
 }
