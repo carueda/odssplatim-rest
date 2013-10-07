@@ -217,7 +217,7 @@ class PeriodsController(implicit val app: App,
    * Repopulates the collection.
    */
   post("/_reload") {
-//    repopulate(app, periodColl, "periods")
+    repopulate(app, periodColl, "periods")
     resetHolidays()
 
     def resetHolidays() = {
