@@ -76,7 +76,7 @@ class PeriodsController(implicit val app: App,
   }
 
   val apiUpdate =
-    (apiOperation[Token]("updatePeriod")
+    (apiOperation[Period]("updatePeriod")
       summary "Updates a period"
       notes dateTimeNotes +
         "<br /> TODO: all parameters are required at the moment but they should be optional (except for the id)."
@@ -109,7 +109,7 @@ class PeriodsController(implicit val app: App,
   }
 
   val apiDelete =
-    (apiOperation[Token]("deletePeriod")
+    (apiOperation[Period]("deletePeriod")
       summary "Deletes a period of given id"
       parameter pathParam[String]("id").description("ID of the period to be removed"))
 
