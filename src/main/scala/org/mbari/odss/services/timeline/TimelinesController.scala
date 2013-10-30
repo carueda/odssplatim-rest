@@ -32,9 +32,14 @@ class TimelinesController(implicit val app: App,
       val q = MongoDBObject("_id" -> new ObjectId(platform_id))
       platformColl.find(q) map {e =>
         for {
-          name      <- e.getAs[String]("name")
-          color     <- e.getAs[String]("color")
-        } yield OdssPlatform(Some(platform_id), name=name, color=Some(color))
+          name          <- e.getAs[String]("name")
+          abbreviation  <- e.getAs[String]("abbreviation")
+          typeName      <- e.getAs[String]("typeName")
+          color         <- e.getAs[String]("color")
+        } yield Platform(Some(platform_id), name=name,
+          Some(abbreviation),
+          Some(typeName),
+          Some(color))
       }
     }
 
@@ -59,11 +64,11 @@ class TimelinesController(implicit val app: App,
     val res = found map {e =>
       logger.info("get timelines: element = " + e)
       for {
-        id       <- e.getAs[ObjectId]("_id")
-        start    <- e.getAs[String]("start")
-        end      <- e.getAs[String]("end")
-        state    <- e.getAs[String]("state")
-      } yield Token(Some(id.toString), platform_id, start, end, state)
+        id           <- e.getAs[ObjectId]("_id")
+        start        <- e.getAs[String]("start")
+        end          <- e.getAs[String]("end")
+        state        <- e.getAs[String]("state")
+      } yield Token(Some(id.toString), platform_id, start, end, state, e.getAsOrElse[String]("description", ""))
     }
     res.toSet
   }

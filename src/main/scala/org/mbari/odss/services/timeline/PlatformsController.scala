@@ -32,10 +32,15 @@ class PlatformsController(implicit val app: App,
     platformColl.find()
     val res = platformColl map {e =>
       for {
-        id       <- e.getAs[ObjectId]("_id")
-        name     <- e.getAs[String]("name")
-        color    <- e.getAs[String]("color")
-      } yield OdssPlatform(Some(id.toString), name=name, color=Some(color))
+        id            <- e.getAs[ObjectId]("_id")
+        name          <- e.getAs[String]("name")
+        abbreviation  <- e.getAs[String]("abbreviation")
+        typeName      <- e.getAs[String]("typeName")
+        color         <- e.getAs[String]("color")
+      } yield Platform(Some(id.toString), name=name,
+                       Some(abbreviation),
+                       Some(typeName),
+                       Some(color))
     }
     res.toSet
   }
@@ -53,10 +58,15 @@ class PlatformsController(implicit val app: App,
     val found = platformColl.find(query)
     val res = found map {e =>
       for {
-        id       <- e.getAs[ObjectId]("_id")
-        name     <- e.getAs[String]("name")
-        color    <- e.getAs[String]("color")
-      } yield OdssPlatform(Some(id.toString), name=name, color=Some(color))
+        id            <- e.getAs[ObjectId]("_id")
+        name          <- e.getAs[String]("name")
+        abbreviation  <- e.getAs[String]("abbreviation")
+        typeName      <- e.getAs[String]("typeName")
+        color         <- e.getAs[String]("color")
+      } yield Platform(Some(id.toString), name=name,
+                       Some(abbreviation),
+                       Some(typeName),
+                       Some(color))
     }
     res.toSet
   }
@@ -80,7 +90,7 @@ class PlatformsController(implicit val app: App,
   }
 
   val apiDelete =
-    (apiOperation[Token]("deletePlatform")
+    (apiOperation[Platform]("deletePlatform")
       summary "Deletes a platform of given id"
       parameter pathParam[String]("id").description("ID of the platform to be removed"))
 

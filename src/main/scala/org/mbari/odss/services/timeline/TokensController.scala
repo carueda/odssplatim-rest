@@ -52,7 +52,8 @@ class TokensController(implicit val app: App,
         start        <- e.getAs[String]("start")
         end          <- e.getAs[String]("end")
         state        <- e.getAs[String]("state")
-      } yield Token(Some(id.toString), platform_id, start, end, state)
+        description  <- e.getAs[String]("description")
+      } yield Token(Some(id.toString), platform_id, start, end, state, description)
     }
     // sort by start date (mainly for debugging purposes)
     res.toList.filter(_ != None) sortWith (_.get.start < _.get.start)
@@ -71,11 +72,12 @@ class TokensController(implicit val app: App,
     val found = tokenColl.find(query)
     val res = found map {e =>
       for {
-        platform <- e.getAs[String]("platform_id")
-        start    <- e.getAs[String]("start")
-        end      <- e.getAs[String]("end")
-        state    <- e.getAs[String]("state")
-      } yield Token(Some(id), platform, start, end, state)
+        platform     <- e.getAs[String]("platform_id")
+        start        <- e.getAs[String]("start")
+        end          <- e.getAs[String]("end")
+        state        <- e.getAs[String]("state")
+        description  <- e.getAs[String]("description")
+      } yield Token(Some(id), platform, start, end, state, description)
     }
     res.toSet
   }
@@ -105,11 +107,13 @@ class TokensController(implicit val app: App,
     val start        = params.get("start").get
     val end          = params.get("end").get
     val state        = params.get("state").get
+    val description  = params.get("description").get
 
     val newObj = MongoDBObject("platform_id" -> platform_id,
                                "start"       -> start,
                                "end"         -> end,
-                               "state"       -> state)
+                               "state"       -> state,
+                               "description" -> description)
     logger.debug("POST token = " + newObj)
 
     tokenColl += newObj
@@ -119,7 +123,7 @@ class TokensController(implicit val app: App,
     logger.info("Token posted: " + newObj + "   id = " + id)
 
     //token.copy(id=id)
-    Token(id, platform_id, start, end, state)
+    Token(id, platform_id, start, end, state, description)
   }
 
 
@@ -149,6 +153,7 @@ class TokensController(implicit val app: App,
     val start:         String = map.getOrElse("start",       halt(400, "start"     ))
     val end:           String = map.getOrElse("end",         halt(400, "end"       ))
     val state:         String = map.getOrElse("state",       halt(400, "state"     ))
+    val description:   String = map.getOrElse("description", halt(400, "description"))
 
     val _id = if (ObjectId.isValid(id)) new ObjectId(id) else halt(404, s"'$id' is an invalid id")
 
@@ -161,6 +166,7 @@ class TokensController(implicit val app: App,
         val update = $set("platform_id" -> platform_id,
                           "start"       -> start,
                           "end"         -> end,
+                          "description" -> description,
                           "state"       -> state)
         val result = tokenColl.update(obj, update)
         val info = "Token '" + id + "' updated (" + result.getN + "): " + update
