@@ -30,6 +30,13 @@ case class Token(id:            Option[String],
                  state:         String,
                  description:   String)
 
+case class Version(name:          String,
+                   description:   String,
+                   created:       String,
+                   updated:       String
+           //TODO  author:        ...    link to authors collection
+                  )
+
 case class Period(id:     Option[String],
                   name:   String,
                   start:  String,

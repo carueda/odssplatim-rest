@@ -21,7 +21,6 @@ class TokensController(implicit val app: App,
 
   val platformColl = app.platformColl
   val tokenColl = app.tokenColl
-  val periodColl = app.periodColl
 
 
   override protected val applicationName = Some("tokens")
@@ -192,6 +191,32 @@ class TokensController(implicit val app: App,
     JString(info)
   }
 
+  ////////////////////////////////////////////////////
+  // TODO version operations
+
+  val apiGetVersionInfo =
+    (apiOperation[String]("getVersions")
+      summary "Gets info about the timeline versions")
+
+  get("/versions", operation(apiGetVersionInfo)) {
+
+    halt(501, "version operations not implemented")
+
+/*
+    val obj = MongoDBObject("versions" -> MongoDBObject("$exists" -> true))
+    tokenColl.findOne(obj) match {
+      case None    => halt(404, "no version info defined")
+      case Some(e) => {
+        e.getAs[MongoDBList]("versions") match {
+          case None             => halt(404, "no version info defined")
+          case Some(versions)   =>
+            val l = versions map { v => v.toString}
+            ...
+        }
+      }
+    }
+*/
+  }
 
   /////////////////////////////////////////////////////
   // special operations
